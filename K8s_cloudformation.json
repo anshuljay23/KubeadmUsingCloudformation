@@ -1,0 +1,467 @@
+{
+    "Resources": {
+        "MasterNodeRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": "ec2.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                  }
+                ]
+              },
+              "Path": "/"
+            }
+          },
+          "MasterNodePolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+              "PolicyName": "MasterNodePolicy",
+              "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "autoscaling:DescribeAutoScalingGroups",
+                      "autoscaling:DescribeLaunchConfigurations",
+                      "autoscaling:DescribeTags",
+                      "ec2:DescribeInstances",
+                      "ec2:DescribeRegions",
+                      "ec2:DescribeRouteTables",
+                      "ec2:DescribeSecurityGroups",
+                      "ec2:DescribeSubnets",
+                      "ec2:DescribeVolumes",
+                      "ec2:DescribeAvailabilityZones",
+                      "ec2:CreateSecurityGroup",
+                      "ec2:CreateTags",
+                      "ec2:CreateVolume",
+                      "ec2:ModifyInstanceAttribute",
+                      "ec2:ModifyVolume",
+                      "ec2:AttachVolume",
+                      "ec2:AuthorizeSecurityGroupIngress",
+                      "ec2:CreateRoute",
+                      "ec2:DeleteRoute",
+                      "ec2:DeleteSecurityGroup",
+                      "ec2:DeleteVolume",
+                      "ec2:DetachVolume",
+                      "ec2:RevokeSecurityGroupIngress",
+                      "ec2:DescribeVpcs",
+                      "elasticloadbalancing:AddTags",
+                      "elasticloadbalancing:AttachLoadBalancerToSubnets",
+                      "elasticloadbalancing:ApplySecurityGroupsToLoadBalancer",
+                      "elasticloadbalancing:CreateLoadBalancer",
+                      "elasticloadbalancing:CreateLoadBalancerPolicy",
+                      "elasticloadbalancing:CreateLoadBalancerListeners",
+                      "elasticloadbalancing:ConfigureHealthCheck",
+                      "elasticloadbalancing:DeleteLoadBalancer",
+                      "elasticloadbalancing:DeleteLoadBalancerListeners",
+                      "elasticloadbalancing:DescribeLoadBalancers",
+                      "elasticloadbalancing:DescribeLoadBalancerAttributes",
+                      "elasticloadbalancing:DetachLoadBalancerFromSubnets",
+                      "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
+                      "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                      "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+                      "elasticloadbalancing:SetLoadBalancerPoliciesForBackendServer",
+                      "elasticloadbalancing:AddTags",
+                      "elasticloadbalancing:CreateListener",
+                      "elasticloadbalancing:CreateTargetGroup",
+                      "elasticloadbalancing:DeleteListener",
+                      "elasticloadbalancing:DeleteTargetGroup",
+                      "elasticloadbalancing:DescribeListeners",
+                      "elasticloadbalancing:DescribeLoadBalancerPolicies",
+                      "elasticloadbalancing:DescribeTargetGroups",
+                      "elasticloadbalancing:DescribeTargetHealth",
+                      "elasticloadbalancing:ModifyListener",
+                      "elasticloadbalancing:ModifyTargetGroup",
+                      "elasticloadbalancing:RegisterTargets",
+                      "elasticloadbalancing:DeregisterTargets",
+                      "elasticloadbalancing:SetLoadBalancerPoliciesOfListener",
+                      "iam:CreateServiceLinkedRole",
+                      "kms:DescribeKey"
+                    ],
+                    "Resource": "*"
+                  }
+                ]
+              },
+              "Roles": [
+                {
+                  "Ref": "MasterNodeRole"
+                }
+              ]
+            }
+          },
+          "WorkerNodeRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+              "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": {
+                      "Service": "ec2.amazonaws.com"
+                    },
+                    "Action": "sts:AssumeRole"
+                  }
+                ]
+              },
+              "Path": "/"
+            }
+          },
+          "WorkerNodePolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+              "PolicyName": "WorkerNodePolicy",
+              "PolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Action": [
+                      "ec2:DescribeInstances",
+                      "ec2:DescribeRegions",
+                      "ecr:GetAuthorizationToken",
+                      "ecr:BatchCheckLayerAvailability",
+                      "ecr:GetDownloadUrlForLayer",
+                      "ecr:GetRepositoryPolicy",
+                      "ecr:DescribeRepositories",
+                      "ecr:ListImages",
+                      "ecr:BatchGetImage"
+                    ],
+                    "Resource": "*"
+                  }
+                ]
+              },
+              "Roles": [
+                {
+                  "Ref": "WorkerNodeRole"
+                }
+              ]
+            }
+          },
+          "MasterInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+              "Path": "/",
+              "Roles": [
+                {
+                  "Ref": "MasterNodeRole"
+                }
+              ]
+            }
+          },
+          "WorkerInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+              "Path": "/",
+              "Roles": [
+                {
+                  "Ref": "WorkerNodeRole"
+                }
+              ]
+            }
+          },
+        "VPCkube": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": "172.91.0.0/16",
+                "EnableDnsSupport": "true",
+                "EnableDnsHostnames": "true",
+                "Tags": [
+                    {
+                        "Key": "kubernetes.io/cluster/kubernetes",
+                        "Value": "owned"
+                    }
+                ]
+            }
+        },
+        "Subnetkube": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VPCkube"
+                },
+                "CidrBlock": "172.91.1.0/24",
+                "MapPublicIpOnLaunch": true,
+                "AvailabilityZone": "us-east-1a",
+                "Tags": [
+                    {
+                        "Key": "kubernetes.io/cluster/kubernetes",
+                        "Value": "owned"
+                    }
+                ]
+            }
+        },
+        "Igwkube": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "kubernetes.io/cluster/kubernetes",
+                        "Value": "owned"
+                    }
+                ]
+            }
+        },
+        "AttachGateway": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VPCkube"
+                },
+                "InternetGatewayId": {
+                    "Ref": "Igwkube"
+                }
+            }
+        },
+        "RouteTableKube": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VPCkube"
+                },
+                "Tags": [
+                    {
+                        "Key": "kubernetes.io/cluster/kubernetes",
+                        "Value": "owned"
+                    }
+                ]
+            }
+        },
+        "RoutetoIgwkube": {
+            "Type": "AWS::EC2::Route",
+            "DependsOn": "AttachGateway",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "RouteTableKube"
+                },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": {
+                    "Ref": "Igwkube"
+                }
+            }
+        },
+        "routeTableSubnetAssociationkube": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "SubnetId": {
+                    "Ref": "Subnetkube"
+                },
+                "RouteTableId": {
+                    "Ref": "RouteTableKube"
+                }
+            }
+        },
+        "SecurityGroupKube": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Allow local connections",
+                "VpcId": {
+                    "Ref": "VPCkube"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 22,
+                        "ToPort": 22,
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "-1",
+                        "CidrIp": "172.91.0.0/16",
+                        "Description": "Allow all traffic within the VPC"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 6443,
+                        "ToPort": 6443,
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 31080,
+                        "ToPort": 31080,
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "kubernetes.io/cluster/kubernetes",
+                        "Value": "owned"
+                    }
+                ]
+            }
+        },
+        "MasterNode": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "ImageId": "ami-0e86e20dae9224db8",
+                "InstanceType": "t2.medium",
+                "IamInstanceProfile": {
+                    "Ref": "MasterInstanceProfile"
+                  },
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash\n",
+                                "sudo swapoff -a\n",
+                                "(crontab -l 2>/dev/null; echo \"@reboot /sbin/swapoff -a\") | crontab - || true\n",
+                                "\n",
+                                "# Install Kubernetes and CRI-O as in previous script\n",
+                                "sudo apt-get update -y\n",
+                                "\n",
+                                "echo -e \"overlay\\nbr_netfilter\" | sudo tee /etc/modules-load.d/crio.conf\n",
+                                "sudo modprobe overlay\n",
+                                "sudo modprobe br_netfilter\n",
+                                "\n",
+                                "echo -e \"net.bridge.bridge-nf-call-iptables=1\\nnet.ipv4.ip_forward=1\\nnet.bridge.bridge-nf-call-ip6tables=1\" | sudo tee /etc/sysctl.d/99-kubernetes-cri.conf\n",
+                                "sudo sysctl --system\n",
+                                "\n",
+                                "# Add CRI-O repository and install it\n",
+                                "echo \"deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/ /\" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list\n",
+                                "echo \"deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/1.28/xUbuntu_22.04/ /\" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:1.28.list\n",
+                                "\n",
+                                "curl -L https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:1.28/xUbuntu_22.04/Release.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -\n",
+                                "curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/Release.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -\n",
+                                "\n",
+                                "sudo apt-get update\n",
+                                "sudo apt-get install -y cri-o cri-o-runc\n",
+                                "\n",
+                                "sudo systemctl daemon-reload\n",
+                                "sudo systemctl enable crio --now\n",
+                                "\n",
+                                "# Install Kubernetes components\n",
+                                "sudo apt-get install -y apt-transport-https ca-certificates curl gpg\n",
+                                "\n",
+                                "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg\n",
+                                "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list\n",
+                                "\n",
+                                "sudo apt-get update\n",
+                                "sudo apt-get install -y kubelet kubeadm kubectl\n",
+                                "sudo apt-mark hold kubelet kubeadm kubectl\n"
+                            ]
+                        ]
+                    }
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "MasterNode"  
+                      },
+                    {
+                        "Key": "kubernetes.io/cluster/kubernetes",
+                        "Value": "owned"
+                    }
+                ],
+                "NetworkInterfaces": [
+                    {
+                        "DeviceIndex": "0",
+                        "PrivateIpAddress": "172.91.1.10",
+                        "AssociatePublicIpAddress": "true",
+                        "DeleteOnTermination": "true",
+                        "SubnetId": {
+                            "Ref": "Subnetkube"
+                        },
+                        "GroupSet": [
+                            {
+                                "Ref": "SecurityGroupKube"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        "WorkerNode": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "ImageId": "ami-0e86e20dae9224db8",
+                "InstanceType": "t2.medium",
+                "IamInstanceProfile": {
+                    "Ref": "WorkerInstanceProfile"
+                  },
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash\n",
+                                "sudo swapoff -a\n",
+                                "(crontab -l 2>/dev/null; echo \"@reboot /sbin/swapoff -a\") | crontab - || true\n",
+                                "\n",
+                                "# Install Kubernetes and CRI-O as in previous script\n",
+                                "sudo apt-get update -y\n",
+                                "\n",
+                                "echo -e \"overlay\\nbr_netfilter\" | sudo tee /etc/modules-load.d/crio.conf\n",
+                                "sudo modprobe overlay\n",
+                                "sudo modprobe br_netfilter\n",
+                                "\n",
+                                "echo -e \"net.bridge.bridge-nf-call-iptables=1\\nnet.ipv4.ip_forward=1\\nnet.bridge.bridge-nf-call-ip6tables=1\" | sudo tee /etc/sysctl.d/99-kubernetes-cri.conf\n",
+                                "sudo sysctl --system\n",
+                                "\n",
+                                "# Add CRI-O repository and install it\n",
+                                "echo \"deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/ /\" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list\n",
+                                "echo \"deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable:/cri-o:/1.28/xUbuntu_22.04/ /\" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:stable:cri-o:1.28.list\n",
+                                "\n",
+                                "curl -L https://download.opensuse.org/repositories/devel:kubic:libcontainers:stable:cri-o:1.28/xUbuntu_22.04/Release.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -\n",
+                                "curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_22.04/Release.key | sudo apt-key --keyring /etc/apt/trusted.gpg.d/libcontainers.gpg add -\n",
+                                "\n",
+                                "sudo apt-get update\n",
+                                "sudo apt-get install -y cri-o cri-o-runc\n",
+                                "\n",
+                                "sudo systemctl daemon-reload\n",
+                                "sudo systemctl enable crio --now\n",
+                                "\n",
+                                "# Install Kubernetes components\n",
+                                "sudo apt-get install -y apt-transport-https ca-certificates curl gpg\n",
+                                "\n",
+                                "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg\n",
+                                "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list\n",
+                                "\n",
+                                "sudo apt-get update\n",
+                                "sudo apt-get install -y kubelet kubeadm kubectl\n",
+                                "sudo apt-mark hold kubelet kubeadm kubectl\n"
+                            ]
+                        ]
+                    }
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "WorkerNode"  
+                      },
+                    {
+                        "Key": "kubernetes.io/cluster/kubernetes",
+                        "Value": "owned"
+                    }
+                    
+                ],
+                "NetworkInterfaces": [
+                    {
+                        "DeviceIndex": "0",
+                        "PrivateIpAddress": "172.91.1.14",
+                        "AssociatePublicIpAddress": "true",
+                        "DeleteOnTermination": "true",
+                        "SubnetId": {
+                            "Ref": "Subnetkube"
+                        },
+                        "GroupSet": [
+                            {
+                                "Ref": "SecurityGroupKube"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+
+
+    }
+  }

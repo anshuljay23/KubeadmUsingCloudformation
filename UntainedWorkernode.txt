@@ -1,0 +1,13 @@
+worker_nodes=$(kubectl get nodes --selector='!node-role.kubernetes.io/control-plane' -o jsonpath='{.items[*].metadata.name}')
+
+# Loop through each worker node and remove taints dynamically
+for node in $worker_nodes; do
+  echo "Processing worker node: $node"
+  
+  # Remove specific taints from the worker node
+  kubectl taint nodes $node node-role.kubernetes.io/control-plane:NoSchedule- || echo "Taint not found: node-role.kubernetes.io/control-plane"
+  kubectl taint nodes $node node.cloudprovider.kubernetes.io/uninitialized- || echo "Taint not found: node.cloudprovider.kubernetes.io/uninitialized"
+
+done
+
+echo "All worker nodes have been processed."

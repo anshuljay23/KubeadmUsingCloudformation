@@ -1,0 +1,16 @@
+sudo hostnamectl set-hostname $(curl -s http://169.254.169.254/latest/meta-data/local-hostname)
+cat <<EOF > /tmp/kubeadm-join-config.yaml
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: JoinConfiguration
+discovery:
+ bootstrapToken:
+   token: f7wytt.25h2qonzsgmj3q3r 
+   apiServerEndpoint: "172.91.1.10:6443"
+   caCertHashes:
+     - "sha256:fff9769b56ad3ddd85df731777fe761d10e70a761128ca6e7a072b03c7f219d6"
+nodeRegistration:
+ name:  $(curl -s http://169.254.169.254/latest/meta-data/local-hostname)
+ kubeletExtraArgs:
+   cloud-provider: external
+EOF
+sudo kubeadm join --config /tmp/kubeadm-join-config.yaml
